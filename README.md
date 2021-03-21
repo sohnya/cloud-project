@@ -27,6 +27,8 @@ gcloud compute firewall-rules create vm1-allow-ingress-tcp-port80-from-subnet1 \
     --target-tags webserver
 ```
 
+See the full firewall configuration [here](gcloud/firewall.sh)
+
 ## Open questions 
 - How is priority used in Firewall rules? 
 
