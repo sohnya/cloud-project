@@ -1,7 +1,7 @@
 # Static IP for A
 variable "vpn_gateway_a_static_ip" {
   type    = string
-  default = "35.227.55.197"
+  default = "35.237.20.53"
 }
 
 # Static IP for B

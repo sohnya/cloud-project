@@ -1,18 +1,20 @@
 provider "google" {
-  project = "org-a-308321"
+  credentials = file("/Users/sonjahiltunen/Secrets/gcloud/org-a-961b663ea9dd.json")
+  project = "org-a-309016"
   region  = "us-east1"
   zone    = "us-east1-b"
 }
 
+### Handled by network admins
 module "vpc" {
   source       = "terraform-google-modules/network/google"
   version      = "~> 3.0"
-  project_id   = "org-a-308321"
+  project_id   = "org-a-309016"
   network_name = "vpc-a"
   routing_mode = "GLOBAL"
 
   subnets = [
-    {
+    { 
       subnet_name           = "network-aa",
       subnet_ip             = "10.0.10.0/24",
       subnet_region         = "us-east1",
@@ -30,6 +32,7 @@ module "vpc" {
   # https://registry.terraform.io/modules/GMafra/firewall-rules/gcp/latest
 }
 
+### Handled by compute admins
 resource "google_compute_instance" "vm-aa1" {
   name         = "vm-aa1"
   machine_type = "f1-micro"
@@ -90,7 +93,6 @@ resource "google_compute_firewall" "http" {
 }
 
 # VPN Gateway
-
 resource "google_compute_vpn_gateway" "gateway_a" {
   name    = "vpn-a"
   network = "vpc-a"
@@ -130,12 +132,7 @@ resource "google_compute_vpn_tunnel" "tunnel_a" {
   peer_ip            = var.vpn_gateway_b_static_ip
   shared_secret      = var.shared_secret
   target_vpn_gateway = google_compute_vpn_gateway.gateway_a.id
-  # From https://cloud.google.com/network-connectivity/docs/vpn/how-to/creating-static-vpns
-  # When you use the Cloud Console to create a route-based tunnel, 
-  # Classic VPN performs the following tasks:
-  # Sets the tunnel's local and remote traffic selectors to any IP address (0.0.0.0/0).
-  # For each range in Remote network IP ranges, Google Cloud creates a custom static 
-  # route whose destination (prefix) is the range's CIDR and whose next hop is the tunnel.
+
   local_traffic_selector  = ["0.0.0.0/0"]
   remote_traffic_selector = ["0.0.0.0/0"]
 
