@@ -136,7 +136,8 @@ resource "google_compute_vpn_tunnel" "tunnel_a" {
   # Sets the tunnel's local and remote traffic selectors to any IP address (0.0.0.0/0).
   # For each range in Remote network IP ranges, Google Cloud creates a custom static 
   # route whose destination (prefix) is the range's CIDR and whose next hop is the tunnel.
-  local_traffic_selector = ["0.0.0.0/0"]
+  local_traffic_selector  = ["0.0.0.0/0"]
+  remote_traffic_selector = ["0.0.0.0/0"]
 
   depends_on = [
     google_compute_forwarding_rule.fr_esp,
