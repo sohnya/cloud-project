@@ -50,26 +50,18 @@ Can also be setup in Terraform but was done manually.
 
 **Roles**
 
-* Project Owner `roles/owner` (basic role)
-    ```
-    All editor permissions and permissions to:
+* Project Owner `roles/owner` project.owner@sonjahiltunen.com
+    - All editor permissions
     
-    Manage roles and permissions for a project and all resources within the project.
-    
-    Set up billing for a project.
-    ```
-* Compute Admin `roles/compute.admin`
-    ```
-    Full control of all Compute Engine resources.
-    ```
-* Security Admin `roles/iam.securityAdmin`
-    ```
-    Security admin role, with permissions to get and set any IAM policy.
-    ```
-* Network Management Admin `roles/networkmanagement.admin`
-    ```	
-    Full access to Network Management resources.
-    ```
+    and permissions to:
+    - Manage roles and permissions for a project and all resources within the project.
+    - Set up billing for a project.
+* Compute Admin `roles/compute.admin` compute.admin@sonjahiltunen.com
+    - Full control of all Compute Engine resources.
+* Security Admin `roles/iam.securityAdmin` security.admin@sonjahiltunen.com
+    - Security admin role, with permissions to get and set any IAM policy.
+* Network Management Admin `roles/networkmanagement.admin` network.admin@sonjahiltunen.com
+    - Full access to Network Management resources.
 
 ---
 ## Networks and VMs
@@ -83,7 +75,7 @@ The ask was to create two projects in Google Cloud and set up networking for tho
 _Figure 1: Networks_
 
 The VPC and its subnets are created using a Terraform `Module`. 
-```json
+```
 module "vpc" {
   source       = "terraform-google-modules/network/google"
   version      = "~> 3.0"
@@ -111,7 +103,7 @@ module "vpc" {
 ### VM setup
 
 Resource in Terraform
-``` json 
+``` 
 resource "google_compute_instance" "vm-aa1" {
   name         = "vm-aa1"
   machine_type = "f1-micro"
@@ -132,7 +124,7 @@ resource "google_compute_instance" "vm-aa1" {
 }
 ```
 To add an external IP, the network interface also contains an empty access_config. 
-```json
+```
   network_interface {
     subnetwork = "network-ab"
     access_config {
@@ -151,7 +143,7 @@ Classic VPN. The service in Google is called
 
 The VPN was set up using the modules [compute_vpn_gateway](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_vpn_gateway)
 
-```json
+```
 resource "google_compute_vpn_gateway" "gateway_a" {
   name    = "vpn-a"
   network = "vpc-a"
@@ -161,7 +153,7 @@ resource "google_compute_vpn_gateway" "gateway_a" {
 }
 ```
 The Google Cloud UI automatically creates the necessary forwarding rules when we select a classic VPN. This is not the case for the Terraform configuration: The forwarding rules have to be explicitly created as follows: 
-```json
+```
 resource "google_compute_forwarding_rule" "fr_esp" {
   name        = "forwarding-rule-esp"
   ip_protocol = "ESP"
@@ -193,7 +185,7 @@ As described [here](https://cloud.google.com/network-connectivity/docs/vpn/how-t
   - For each range in Remote network IP ranges, ccreates a custom static route whose destination (prefix) is the range's CIDR and whose next hop is the tunnel."
 
 The [compute_vpn_tunnel](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_vpn_tunnel) was therefore set up as follows:
-```json
+```
 resource "google_compute_vpn_tunnel" "tunnel_a" {
   name               = "tunnel-a"
   peer_ip            = var.vpn_gateway_b_static_ip
@@ -211,7 +203,7 @@ resource "google_compute_vpn_tunnel" "tunnel_a" {
 }
 ```
 Note that the Terraform module does not contain an explicit choice of routing configuration. Static routing is obtained by setting `local_traffic_selector` and `remote_traffic_selector` to `["0.0.0.0/0"]`, and adding the static hop as
-```json
+```
 resource "google_compute_route" "route_a" {
   name                = "route-a"
   network             = "vpc-a"
