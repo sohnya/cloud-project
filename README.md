@@ -10,6 +10,15 @@ This is a fun project
 
 ---
 ## IAM
+
+TODO: Describe your role assignments and the expected results in your Lab documents for each account
+
+Role covered in Lab
+- Project Owner
+- Compute Admin
+- Security Admin
+- Network Management Admin
+
 Can also be setup in Terraform but was done manually. 
 
 ---
@@ -61,12 +70,11 @@ Resource in Terraform
 
 Classic VPN. The service in Google is called 
 
+The VPN was set up using the modules [compute_vpn_gateway](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_vpn_gateway) and [compute_vpn_tunnel](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_vpn_tunnel).
+
 ### Challenges encountered
 - The terraform module does not contain choice of routing configuration. Need to resort to documentation to understand that static routing is obtained by setting local_traffic_selector and remote_traffic_selector to ["0.0.0.0/0"]
 - The UI does not explictly ask to define the forwarding rules that are necessary to create a classic VPN (UDP 500, UDP 4500 and ESP)
-
-- https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_vpn_gateway
-- https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_vpn_tunnel
 
 ### Forwarding rules
 - UDP 4500 
@@ -75,8 +83,33 @@ Classic VPN. The service in Google is called
 
 ---
 ## Firewall rules
+**Requirement 4.1 - VVM-AA1 & VM-BA11**
+- Only use Private IP (Not directly accessible from Internet)
+- Communicate together using Router with static routes & VPN Gateway to encrypt communication
+- VM-AA1 CAN ping VM-BA1 using Firewall rules
+- VM-BA1 CANNOT ping VM-AA1 using Firewall rules
 
-- TODO: How is priority used in Firewall rules? 
+**Requirement 4.2 - VM-AA1 & VM-AB11**
+- CANNOT ping in both direction using Firewall rules
+
+**Requirement 4.3 - VM-BA1 & VM-BB1-2**
+CAN ping in both direction using Firewall rules
+
+**Requirement 4.4 - Everyone on the Internet**
+- CAN HTTP on port TCP-80 to VM-AB1 Public IP address
+- CANNOT HTTP on port TCP-80 to VM-BB1 Public IP address
+- CAN ping to VM-AB1 & VM-BB1 Public IP address
+- CANNOT SSH to VM-AB1 & VM-BB1 Public IP address
+
+**Requirement 4.5 - VM-BB1 (using Public Internet)**
+- CANNOT HTTP on port TCP-80 to VM-AB1 Public IP address
+- CAN ping to VM-AB1 Public IP address
+- CAN SSH to VM-AB1 Public IP address
+- CANNOT ping 8.8.8.8 (Google's Public DNS)
+
+
+TODO
+- How is priority used in Firewall rules? 
 
 
 | Default (left-aligned)        | Centered           | Right-aligned  |
