@@ -69,12 +69,12 @@ Can also be setup in Terraform but was done manually.
 The ask was to create two projects in Google Cloud and set up networking for those two projects. 
 
 ### Network setup
+Figure 1 outlines the required architecture for this lab project.
 
-```
-```
+![Alt text](images/architecture.png?raw=true "Title")
 _Figure 1: Networks_
 
-The VPC and its subnets are created using a Terraform `Module`. 
+The VPC and its subnets are created using a Terraform [module](https://www.terraform.io/docs/language/modules/index.html). 
 ```
 module "vpc" {
   source       = "terraform-google-modules/network/google"
@@ -123,7 +123,7 @@ resource "google_compute_instance" "vm-aa1" {
   ]
 }
 ```
-To add an external IP, the network interface also contains an empty access_config. 
+To add an external IP, the network interface also contains an empty `access_config`. 
 ```
   network_interface {
     subnetwork = "network-ab"
@@ -152,7 +152,7 @@ resource "google_compute_vpn_gateway" "gateway_a" {
   ]
 }
 ```
-The Google Cloud UI automatically creates the necessary forwarding rules when we select a classic VPN. This is not the case for the Terraform configuration: The forwarding rules have to be explicitly created as follows: 
+The Google Cloud UI automatically creates the necessary forwarding rules when we select a classic VPN. This is not the case for the Terraform configuration - the forwarding rules have to be explicitly created as follows: 
 ```
 resource "google_compute_forwarding_rule" "fr_esp" {
   name        = "forwarding-rule-esp"
@@ -179,8 +179,7 @@ resource "google_compute_forwarding_rule" "fr_udp4500" {
 ``` 
 
 ### VPN Tunnel
-
-As described [here](https://cloud.google.com/network-connectivity/docs/vpn/how-to/creating-static-vpns): "When you use the Cloud Console to create a route-based tunnel, Classic VPN performs the following tasks:
+The Terraform module does not contain an explicit choice of routing configuration. As described [here](https://cloud.google.com/network-connectivity/docs/vpn/how-to/creating-static-vpns): "When you use the Cloud Console to create a route-based tunnel, Classic VPN [...]:
   - Sets the tunnel's local and remote traffic selectors to any IP address (0.0.0.0/0).
   - For each range in Remote network IP ranges, ccreates a custom static route whose destination (prefix) is the range's CIDR and whose next hop is the tunnel."
 
@@ -202,7 +201,7 @@ resource "google_compute_vpn_tunnel" "tunnel_a" {
   ]
 }
 ```
-Note that the Terraform module does not contain an explicit choice of routing configuration. Static routing is obtained by setting `local_traffic_selector` and `remote_traffic_selector` to `["0.0.0.0/0"]`, and adding the static hop as
+and the static route added as
 ```
 resource "google_compute_route" "route_a" {
   name                = "route-a"
