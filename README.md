@@ -8,8 +8,11 @@ https://cloud.google.com/community/tutorials/managing-gcp-projects-with-terrafor
 The full project description can be found [here](project-overview.pdf)
 
 **Table of contents**
-- [Terraform](###Terraform)
-- [Networks and VMs](###Networks-and-VMs)
+- [Terraform](##Terraform)
+- [Networks and VMs](##Networks-and-VMs)
+- [VPN](##VPN)
+- [Firewall Rules](##Firewall-rules)
+- [Web Server Setup](##Web-Server-Setup)
 
 ---
 ## Terraform
@@ -136,12 +139,19 @@ To add an external IP, the network interface also contains an empty `access_conf
 ```
 
 ---
-## VPN gateway
+## VPN
 
-- TODO: What is a forwarding rule in a VPN?
-- TODO: What is the difference between static routing and policy based routing? 
+**Requirement 4.1 - VVM-AA1 & VM-BA1**
+- Only use Private IP (Not directly accessible from Internet)
+- Communicate together using a router with static routes & VPN Gateway to encrypt communication
+
+**Open questions**
+- What is a forwarding rule in a VPN?
+- What is the difference between static routing and policy based routing? 
 
 Classic VPN. The service in Google is called 
+
+### VPN Gateway
 
 The VPN was set up using the modules [compute_vpn_gateway](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_vpn_gateway)
 
@@ -216,44 +226,51 @@ resource "google_compute_route" "route_a" {
 
 ---
 ## Firewall rules
-**Requirement 4.1 - VVM-AA1 & VM-BA11**
-- Only use Private IP (Not directly accessible from Internet)
-- Communicate together using Router with static routes & VPN Gateway to encrypt communication
-- VM-AA1 CAN ping VM-BA1 using Firewall rules
-- VM-BA1 CANNOT ping VM-AA1 using Firewall rules
 
-**Requirement 4.2 - VM-AA1 & VM-AB11**
-- CANNOT ping in both direction using Firewall rules
+TODO: How is priority used in Firewall rules? 
 
-**Requirement 4.3 - VM-BA1 & VM-BB1-2**
-CAN ping in both direction using Firewall rules
+The firewall rules were implemented in Terraform using the resource [compute_firewall](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_firewall). Table 1 contains the requirements for the firewall rules. 
 
-**Requirement 4.4 - Everyone on the Internet**
-- CAN HTTP on port TCP-80 to VM-AB1 Public IP address
-- CANNOT HTTP on port TCP-80 to VM-BB1 Public IP address
-- CAN ping to VM-AB1 & VM-BB1 Public IP address
-- CANNOT SSH to VM-AB1 & VM-BB1 Public IP address
+| `ID` | `Requirement`        | `Allow/Deny`  | `protocol, port` | `source tags` | `destination tags`| `source ranges` | `destination ranges` |
+| --- | --- |:---:| ---|---|---|---|---
+|4.1.3| VM-AA1 CAN ping VM-BA1 using Firewall rules | allow | icmp | vm-aa1 | vm-ba1 |||
+|4.1.4| VM-BA1 CANNOT ping VM-AA1 using Firewall rules | deny | icmp | vm-ba1 | vm-ab1 |
+|4.2.1(a)| VM-AA1 CANNOT ping VM-AB1 using Firewall rules | deny | icmp | vm-aa1 | vm-ab1 |
+|4.2.1(b)| VM-AB1 CANNOT ping VM-AA1 using Firewall rules | deny | icmp | vm-ab1 | vm-aa1 |
+|4.3.1(a)| VM-BA1 CAN ping VM-BB1 using Firewall rules | allow | icmp | vm-ba1 | vm-bb1 |
+|4.3.1(b)| VM-BB1 CAN ping VM-BA1 using Firewall rules | allow | icmp | vm-bb1 | vm-ba1 |
+|4.4.1| Internet CAN HTTP on port TCP-80 to VM-AB1 Public IP address | allow | tcp, 80 || vm-ab1 | 0.0.0.0/0 |
+|4.4.2| Internet CANNOT HTTP on port TCP-80 to VM-BB1 Public IP address | deny | tcp, 80 || vm-bb1 | 0.0.0.0/0
+|4.4.3| Internet CAN ping to VM-AB1 & VM-BB1 Public IP address | allow | icmp || vm-ab1, vm-bb1 | 0.0.0.0/0 |
+|4.4.4| Internet CANNOT SSH to VM-AB1 & VM-BB1 Public IP address | deny |  ssh, 22 || vm-ab1, vm-bb1 | 0.0.0.0/0
+|4.5.1| VM-BB1 (using Public Internet) CANNOT HTTP on port TCP-80 to VM-AB1 Public IP address | deny | tcp, 80 | vm-bb1 | vm-ab1 
+|4.5.2| VM-BB1 (using Public Internet) CAN ping to VM-AB1 Public IP address | allow | icmp | vm-bb1 | vm-ab1 |
+|4.5.3| VM-BB1 (using Public Internet) CAN SSH to VM-AB1 Public IP address | allow | ssh, 22 | vm-bb1 | vm-ab1
+|4.5.4| VM-BB1 (using Public Internet) CANNOT ping 8.8.8.8 (Google's Public DNS) | deny | icpm | vm-bb1 ||| 8.8.8.8
 
-**Requirement 4.5 - VM-BB1 (using Public Internet)**
-- CANNOT HTTP on port TCP-80 to VM-AB1 Public IP address
-- CAN ping to VM-AB1 Public IP address
-- CAN SSH to VM-AB1 Public IP address
-- CANNOT ping 8.8.8.8 (Google's Public DNS)
-
-
-TODO
-- How is priority used in Firewall rules? 
-
-
-| Default (left-aligned)        | Centered           | Right-aligned  |
-| ------------- |:-------------:| -----:|
-| 1      | right-aligned | $1600 |
-| 2      | centered      |   $12 |
-| 3 | are neat      |    $1 |
 _Table 1: Firewall rules_
 
-### Firewall rule configuration
-Firewall rules were set up using the terraform module [firewall-rule](https://registry.terraform.io/modules/terraform-google-modules/network/google/latest/submodules/firewall-rules). 
+, but since they are so many I will only include an example code snippet. The following example firewall rule corresponds to the requirement 4.1.3:`VM-AA1 CAN ping VM-BA1 using Firewall rules`
+
+```
+resource "google_compute_firewall" "http" {
+  name    = "4-1-3"
+  network = "vpc-a"
+
+  allow {
+    protocol = "icmp"
+  }
+
+  source_tags = []
+  destination_tags = []
+
+  depends_on = [
+    module.vpc
+  ]
+}
+```
+
+## Web Server Setup
 
 ---
 ## Additional reading

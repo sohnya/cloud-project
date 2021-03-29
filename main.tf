@@ -1,8 +1,8 @@
 provider "google" {
   credentials = file("/Users/sonjahiltunen/Secrets/gcloud/org-a-961b663ea9dd.json")
-  project = "org-a-309016"
-  region  = "us-east1"
-  zone    = "us-east1-b"
+  project     = "org-a-309016"
+  region      = "us-east1"
+  zone        = "us-east1-b"
 }
 
 ### Handled by network admins
@@ -14,7 +14,7 @@ module "vpc" {
   routing_mode = "GLOBAL"
 
   subnets = [
-    { 
+    {
       subnet_name           = "network-aa",
       subnet_ip             = "10.0.10.0/24",
       subnet_region         = "us-east1",
@@ -36,6 +36,7 @@ module "vpc" {
 resource "google_compute_instance" "vm-aa1" {
   name         = "vm-aa1"
   machine_type = "f1-micro"
+  tags         = ["vm-aa1"]
 
   boot_disk {
     initialize_params {
@@ -55,6 +56,7 @@ resource "google_compute_instance" "vm-aa1" {
 resource "google_compute_instance" "vm-ab1" {
   name         = "vm-ab1"
   machine_type = "f1-micro"
+  tags         = ["vm-ab1"]
 
   boot_disk {
     initialize_params {
@@ -68,24 +70,6 @@ resource "google_compute_instance" "vm-ab1" {
       // This section is included to give the VM an external ephemeral IP address
     }
   }
-
-  depends_on = [
-    module.vpc
-  ]
-}
-
-# Direction: Ingress
-resource "google_compute_firewall" "http" {
-  name    = "vpc-a-firewall-http"
-  network = "vpc-a"
-
-  allow {
-    protocol = "tcp"
-    ports    = ["80"]
-  }
-
-  target_tags   = ["vpc-a-firewall-http"]
-  source_ranges = ["0.0.0.0/0"]
 
   depends_on = [
     module.vpc
@@ -149,5 +133,22 @@ resource "google_compute_route" "route_a" {
   dest_range          = "10.1.10.0/24"
   priority            = 1000
   next_hop_vpn_tunnel = google_compute_vpn_tunnel.tunnel_a.id
+}
+
+# Direction: Ingress
+resource "google_compute_firewall" "http" {
+  name    = "vpc-a-firewall-http"
+  network = "vpc-a"
+
+  allow {
+    protocol = "tcp"
+    ports    = ["80"]
+  }
+
+  source_ranges = ["0.0.0.0/0"] # Everyone on the internet
+
+  depends_on = [
+    module.vpc
+  ]
 }
 
