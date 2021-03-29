@@ -5,6 +5,8 @@ This is a fun project
 
 https://cloud.google.com/community/tutorials/managing-gcp-projects-with-terraform
 
+The full project description can be found [here](project-overview.pdf)
+
 **Table of contents**
 - [Terraform](###Terraform)
 - [Networks and VMs](###Networks-and-VMs)
