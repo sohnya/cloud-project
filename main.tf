@@ -71,6 +71,8 @@ resource "google_compute_instance" "vm-ab1" {
     }
   }
 
+  metadata_startup_script = file("startup.sh")
+
   depends_on = [
     module.vpc
   ]
@@ -135,9 +137,8 @@ resource "google_compute_route" "route_a" {
   next_hop_vpn_tunnel = google_compute_vpn_tunnel.tunnel_a.id
 }
 
-# Direction: Ingress
-resource "google_compute_firewall" "http" {
-  name    = "vpc-a-firewall-http"
+resource "google_compute_firewall" "requirement_4_4_1" {
+  name    = "requirement-4-4-1"
   network = "vpc-a"
 
   allow {
@@ -146,9 +147,9 @@ resource "google_compute_firewall" "http" {
   }
 
   source_ranges = ["0.0.0.0/0"] # Everyone on the internet
+  target_tags = ["vm-ab1"]
 
   depends_on = [
     module.vpc
   ]
 }
-

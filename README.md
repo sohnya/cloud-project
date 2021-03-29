@@ -231,7 +231,7 @@ TODO: How is priority used in Firewall rules?
 
 The firewall rules were implemented in Terraform using the resource [compute_firewall](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_firewall). Table 1 contains the requirements for the firewall rules. 
 
-| `ID` | `Requirement`        | `Allow/Deny`  | `protocol, port` | `source tags` | `destination tags`| `source ranges` | `destination ranges` |
+| `ID` | `Requirement`        | `Allow/Deny`  | `protocol, port` | `source tags` | `target tags`| `source ranges` | `destination ranges` |
 | --- | --- |:---:| ---|---|---|---|---
 |4.1.3| VM-AA1 CAN ping VM-BA1 using Firewall rules | allow | icmp | vm-aa1 | vm-ba1 |||
 |4.1.4| VM-BA1 CANNOT ping VM-AA1 using Firewall rules | deny | icmp | vm-ba1 | vm-ab1 |
@@ -253,24 +253,36 @@ _Table 1: Firewall rules_
 , but since they are so many I will only include an example code snippet. The following example firewall rule corresponds to the requirement 4.1.3:`VM-AA1 CAN ping VM-BA1 using Firewall rules`
 
 ```
-resource "google_compute_firewall" "http" {
-  name    = "4-1-3"
-  network = "vpc-a"
+resource "google_compute_firewall" "4_1_3" {
 
-  allow {
-    protocol = "icmp"
-  }
+xxxx
 
-  source_tags = []
-  destination_tags = []
-
-  depends_on = [
-    module.vpc
-  ]
-}
 ```
 
-## Web Server Setup
+## Web Server
+In order to test firewall rules 4.4 and 4.5, we set up a dummy web server. To start a webserver at the startup of `vm-ab1` and `vm-bb1`, the project contains `startups.sh` with the following content: 
+```
+apt update
+apt install -y apache2
+cat <<EOF > /var/www/html/index.html
+<html>
+    <body>
+        <h2>Welcome to your YCIT-018 Lab Project</h2>
+        <h3>Your requirements seems to be working well!</h3>
+    </body>
+</html>
+EOF
+```
+To add a startup script to the VMs, we add the argument `metadata_startup_script` in our Terraform configuration.
+```
+resource "google_compute_instance" "vm-ab1" {
+  ...
+
+  metadata_startup_script = file("startup.sh")
+
+  ... 
+}  
+```
 
 ---
 ## Additional reading
