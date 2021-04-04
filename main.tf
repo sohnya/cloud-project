@@ -23,6 +23,7 @@ module "firewall-rules-a" {
   google_credentials_file = "/Users/sonjahiltunen/Secrets/gcloud/org-a-961b663ea9dd.json"
   region = var.region
   zone = var.zone
+} 
 
 module "project-b" {
   source = "./modules/project"
@@ -49,4 +50,4 @@ module "firewall-rules-b" {
   google_credentials_file = "/Users/sonjahiltunen/Secrets/gcloud/org-b-a97c670bcb79.json"
   region = var.region
   zone = var.zone
-}
+} 
