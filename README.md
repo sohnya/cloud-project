@@ -260,16 +260,23 @@ The firewall rules were implemented in Terraform using the resource [compute_fir
 || ||| deny | icmp | vm-aa1 | vm-ab1 |
 |4.2.1(b)| VM-AB1 CANNOT ping VM-AA1 using Firewall rules ||| deny | icmp | vm-ab1 | vm-aa1 |
 ||  ||| deny | icmp | vm-ab1 | vm-aa1 |
-|4.3.1(a)| VM-BA1 CAN ping VM-BB1 using Firewall rules | allow | icmp | vm-ba1 | vm-bb1 |
-|4.3.1(b)| VM-BB1 CAN ping VM-BA1 using Firewall rules | allow | icmp | vm-bb1 | vm-ba1 |
-|4.4.1| Internet CAN HTTP on port TCP-80 to VM-AB1 Public IP address | allow | tcp, 80 || vm-ab1 | 0.0.0.0/0 |
-|4.4.2| Internet CANNOT HTTP on port TCP-80 to VM-BB1 Public IP address | deny | tcp, 80 || vm-bb1 | 0.0.0.0/0
-|4.4.3| Internet CAN ping to VM-AB1 & VM-BB1 Public IP address | allow | icmp || vm-ab1, vm-bb1 | 0.0.0.0/0 |
-|4.4.4| Internet CANNOT SSH to VM-AB1 & VM-BB1 Public IP address | deny |  ssh, 22 || vm-ab1, vm-bb1 | 0.0.0.0/0
-|4.5.1| VM-BB1 (using Public Internet) CANNOT HTTP on port TCP-80 to VM-AB1 Public IP address | deny | tcp, 80 | vm-bb1 | vm-ab1 
-|4.5.2| VM-BB1 (using Public Internet) CAN ping to VM-AB1 Public IP address | allow | icmp | vm-bb1 | vm-ab1 |
-|4.5.3| VM-BB1 (using Public Internet) CAN SSH to VM-AB1 Public IP address | allow | ssh, 22 | vm-bb1 | vm-ab1
-|4.5.4| VM-BB1 (using Public Internet) CANNOT ping 8.8.8.8 (Google's Public DNS) | deny | icpm | vm-bb1 ||| 8.8.8.8
+|4.3.1(a)| VM-BA1 CAN ping VM-BB1 using Firewall rules ||| allow | icmp | vm-ba1 | vm-bb1 |
+||  ||| allow | icmp | vm-ba1 | vm-bb1 |
+|4.3.1(b)| VM-BB1 CAN ping VM-BA1 using Firewall rules ||| allow | icmp | vm-bb1 | vm-ba1 |
+|4.3.1(b)| || | allow | icmp | vm-bb1 | vm-ba1 |
+|4.4.1| Internet CAN HTTP on port TCP-80 to VM-AB1 Public IP address ||| allow | tcp, 80 || vm-ab1 | 0.0.0.0/0 |
+|4.4.2| Internet CANNOT HTTP on port TCP-80 to VM-BB1 Public IP address ||| deny | tcp, 80 || vm-bb1 | 0.0.0.0/0
+|4.4.3| Internet CAN ping to VM-AB1 & VM-BB1 Public IP address ||| allow | icmp || vm-ab1 | 0.0.0.0/0 |
+|| ||| allow | icmp || vm-bb1 | 0.0.0.0/0 |
+|4.4.4| Internet CANNOT SSH to VM-AB1 & VM-BB1 Public IP address ||| deny |  ssh, 22 || vm-ab1 | 0.0.0.0/0
+|4.4.4| Internet CANNOT SSH to VM-AB1 & VM-BB1 Public IP address ||| deny |  ssh, 22 || vm-bb1 | 0.0.0.0/0
+|4.5.1| VM-BB1 (using Public Internet) CANNOT HTTP on port TCP-80 to VM-AB1 Public IP address ||| deny | tcp, 80 | vm-bb1 | vm-ab1 
+||  ||| deny | tcp, 80 | vm-bb1 | vm-ab1 
+|4.5.2| VM-BB1 (using Public Internet) CAN ping to VM-AB1 Public IP address ||| allow | icmp | vm-bb1 | vm-ab1 |
+||  ||| allow | icmp | vm-bb1 | vm-ab1 |
+|4.5.3| VM-BB1 (using Public Internet) CAN SSH to VM-AB1 Public IP address ||| allow | ssh, 22 | vm-bb1 | vm-ab1
+|4.5.3||| | allow | ssh, 22 | vm-bb1 | vm-ab1
+|4.5.4| VM-BB1 (using Public Internet) CANNOT ping 8.8.8.8 (Google's Public DNS) | b | egress | deny | icpm | vm-bb1 ||| 8.8.8.8
 
 _Table 1: Firewall rules_
 
