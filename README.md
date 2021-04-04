@@ -1,3 +1,4 @@
+github.com/sohnya/cloud-project
 
 ## Introduction
 
@@ -38,6 +39,11 @@ One way of setting up Google Cloud infrastructure is using [Terraform google-mod
 - https://registry.terraform.io/providers/hashicorp/google/latest/docs/guides/getting_started
 - https://learn.hashicorp.com/tutorials/terraform/google-cloud-platform-build?in=terraform/gcp-get-started
 - See an [example module](https://registry.terraform.io/modules/terraform-google-modules/network/google/latest). 
+
+
+
+### What do I want to do 
+- Run root module 
 
 ---
 ## IAM
