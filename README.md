@@ -250,9 +250,10 @@ TODO: How is priority used in Firewall rules?
 
 The firewall rules were implemented in Terraform using the resource [compute_firewall](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_firewall). Table 1 contains the requirements for the firewall rules. 
 
-| `ID` | `Requirement`        | `Allow/Deny`  | `protocol, port` | `source tags` | `target tags`| `source ranges` | `destination ranges` |
-| --- | --- |:---:| ---|---|---|---|---
-|4.1.3| VM-AA1 CAN ping VM-BA1 using Firewall rules | allow | icmp | vm-aa1 | vm-ba1 |||
+|`ID`| `Requirement`|`project`| `ingress/egress`| `Allow/Deny`  | `protocol, port` | `source tags` | `target tags`| `source ranges` | `destination ranges` |
+| --- |---| --- |---|:---:| ---|---|---|---|---
+|4.1.3| VM-AA1 CAN ping VM-BA1 using Firewall rules |a|egress| allow | icmp | vm-aa1 | vm-ba1 |
+|||b|ingress| allow | icmp | vm-aa1 | vm-ba1 |
 |4.1.4| VM-BA1 CANNOT ping VM-AA1 using Firewall rules | deny | icmp | vm-ba1 | vm-ab1 |
 |4.2.1(a)| VM-AA1 CANNOT ping VM-AB1 using Firewall rules | deny | icmp | vm-aa1 | vm-ab1 |
 |4.2.1(b)| VM-AB1 CANNOT ping VM-AA1 using Firewall rules | deny | icmp | vm-ab1 | vm-aa1 |
