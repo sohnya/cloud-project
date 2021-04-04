@@ -5,15 +5,3 @@ provider "google" {
   credentials = file(var.google_credentials_file)
 }
 
-resource "google_compute_firewall" "requirement_4_4_1" {
-  name    = "requirement-4-4-1"
-  network = "vpc-b"
-
-  allow {
-    protocol = "tcp"
-    ports    = ["80"]
-  }
-
-  source_ranges = ["0.0.0.0/0"] # Everyone on the internet
-  target_tags = ["vm-bb"]
-}
