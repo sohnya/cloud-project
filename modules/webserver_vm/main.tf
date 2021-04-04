@@ -16,5 +16,5 @@ resource "google_compute_instance" "webserver_vm" {
     }
   }
 
-  metadata_startup_script = file("/Users/sonjahiltunen/personal/cloud-project/startup.sh")
+  metadata_startup_script = file("./modules/webserver_vm/startup.sh")
 }
