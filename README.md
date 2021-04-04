@@ -265,13 +265,13 @@ The firewall rules were implemented in Terraform using the resource [compute_fir
 |4.4.2| Internet CANNOT HTTP on port TCP-80 to VM-BB1 Public IP address |b|ingress| deny | tcp, 80 || vm-bb1 | 0.0.0.0/0
 |4.4.3| Internet CAN ping to VM-AB1 & VM-BB1 Public IP address |a|ingress| allow | icmp || vm-ab1 | 0.0.0.0/0 |
 || |b|ingress| allow | icmp || vm-bb1 | 0.0.0.0/0 |
-|4.4.4| Internet CANNOT SSH to VM-AB1 & VM-BB1 Public IP address |a|ingress| deny |  ssh, 22 || vm-ab1 | 0.0.0.0/0
-|| |b|ingress| deny |  ssh, 22 || vm-bb1 | 0.0.0.0/0
+|4.4.4| Internet CANNOT SSH to VM-AB1 & VM-BB1 Public IP address |a|ingress| deny |  tcp, 22 || vm-ab1 | 0.0.0.0/0
+|| |b|ingress| deny |  tcp, 22 || vm-bb1 | 0.0.0.0/0
 |4.5.1| VM-BB1 (using Public Internet) CANNOT HTTP on port TCP-80 to VM-AB1 Public IP address |a|ingress| deny | tcp, 80 | vm-bb1 | vm-ab1
-|4.5.2| VM-BB1 (using Public Internet) CAN ping to VM-AB1 Public IP address |a|ingress| allow | icmp | vm-bb1 | |
+|4.5.2| VM-BB1 (using Public Internet) CAN ping to VM-AB1 Public IP address |a|ingress| allow | icmp | vm-bb1 | vm-ab |
 ||  |b|egress| allow | icmp | vm-bb1 | vm-ab1 |
-|4.5.3| VM-BB1 (using Public Internet) CAN SSH to VM-AB1 Public IP address |a|ingress| allow | ssh, 22 | vm-bb1 | vm-ab1
-|||b|egress | allow | ssh, 22 | vm-bb1 | vm-ab1
+|4.5.3| VM-BB1 (using Public Internet) CAN SSH to VM-AB1 Public IP address |a|ingress| allow | tcp, 22 | vm-bb1 | vm-ab1
+|||b|egress | allow | tcp, 22 | vm-bb1 | vm-ab1
 |4.5.4| VM-BB1 (using Public Internet) CANNOT ping 8.8.8.8 (Google's Public DNS) | b | egress | deny | icpm | vm-bb1 ||| 8.8.8.8
 
 _Table 1: Firewall rules_
