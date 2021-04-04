@@ -2,11 +2,12 @@ github.com/sohnya/cloud-project
 
 ## Introduction
 
-This is a fun project
+TODO: HELLO
 
-https://cloud.google.com/community/tutorials/managing-gcp-projects-with-terraform
+Figure 1 outlines the required architecture for this lab project. The full project description can be found [here](project-overview.pdf)
 
-The full project description can be found [here](project-overview.pdf)
+![Alt text](images/architecture.png?raw=true "Networks")
+_Figure 1: Networks_
 
 **Table of contents**
 - [Terraform](##Terraform)
@@ -46,11 +47,16 @@ One way of setting up Google Cloud infrastructure is using [Terraform google-mod
 - Run root module 
 
 ---
+
+## Projects
+**Requirement 1.1**: The first lab requirement was to create two projects to represent sides A and B of the architecture diagram. This was done in the Google Cloud UI. 
+![Projects](images/1.1-projects.png?raw=true "Projects")
+
 ## IAM
 
-TODO: 
-- If I run `terraform apply` with limited permissions, will it update what I have access to (or completely fail)? Do I need to divide the `main.tf` file into several files? 
-- Describe your role assignments and the expected results in your Lab documents for each account. 
+The main account for this
+
+- Describe your role assignments and the expected results in your Lab documents for each account
 
 We want to [use IAM securely](https://cloud.google.com/iam/docs/using-iam-securely). In our organization, we have [separate network and security teams](https://cloud.google.com/iam/docs/job-functions/networking#separate_network_security_teams). 
 
@@ -60,10 +66,8 @@ Using [predefined roles](https://cloud.google.com/iam/docs/understanding-roles#p
 Can also be setup in Terraform but was done manually. 
 
 **Roles**
-
 * Project Owner `roles/owner` project.owner@sonjahiltunen.com
     - All editor permissions
-    
     and permissions to:
     - Manage roles and permissions for a project and all resources within the project.
     - Set up billing for a project.
@@ -74,50 +78,57 @@ Can also be setup in Terraform but was done manually.
 * Network Management Admin `roles/networkmanagement.admin` network.admin@sonjahiltunen.com
     - Full access to Network Management resources.
 
+**Requirement 1.2**
+- The IAM roles for the accounts were assigned in the IAM section of the cloud console. 
+- The main account is kept intact (with maximum permissions), as per the lab requirements. 
+- The four required roles can be seen in the screenshot below. Notice that there is also a service account for Terraform. This was added in the [API credentials section](https://console.cloud.google.com/apis/credentials) in the cloud console (following the guidelines [here](https://registry.terraform.io/providers/hashicorp/google/latest/docs/guides/getting_started)). 
+![IAM](images/1-2-iam.png?raw=true "IAM")
+
+TODO: 
+- If I run `terraform apply` with limited permissions, will it update what I have access to (or completely fail)? Do I need to divide the `main.tf` file into several files? 
+- Describe your role assignments and the expected results in your Lab documents for each account. 
+
 ---
 ## Networks and VMs
 
-The ask was to create two projects in Google Cloud and set up networking for those two projects. 
-
 ### Network setup
-Figure 1 outlines the required architecture for this lab project.
-
-![Alt text](images/architecture.png?raw=true "Title")
-_Figure 1: Networks_
-
-The VPC and its subnets are created using a Terraform [module](https://www.terraform.io/docs/language/modules/index.html). 
+The VPC and its subnets were created using the Terraform module [vpc](https://registry.terraform.io/modules/terraform-google-modules/network/google/latest/submodules/vpc). The configuration is as follows: 
 ```
 module "vpc" {
   source       = "terraform-google-modules/network/google"
   version      = "~> 3.0"
-  project_id   = "org-a-309016"
-  network_name = "vpc-a"
+  project_id   = var.project_id
+  network_name = "vpc-${var.project_name}"
   routing_mode = "GLOBAL"
 
   subnets = [
-    { 
-      subnet_name           = "network-aa",
-      subnet_ip             = "10.0.10.0/24",
+    {
+      subnet_name           = "network-${var.project_name}a",
+      subnet_ip             = var.subnet_a_ip_range,
       subnet_region         = "us-east1",
       subnet_private_access = "true"
     },
     {
-      subnet_name           = "network-ab",
-      subnet_ip             = "10.0.20.0/24",
+      subnet_name           = "network-${var.project_name}b",
+      subnet_ip             = var.subnet_b_ip_range,
       subnet_region         = "us-east1",
       subnet_private_access = "true"
     }
   ]
+
+  firewall_rules = []
+  # https://registry.terraform.io/modules/GMafra/firewall-rules/gcp/latest
 }
 ```
+and 
 
 ### VM setup
-
-Resource in Terraform
+The VMs that didn't need external IPs were created using a module: `vm`, configured as follows:  
 ``` 
-resource "google_compute_instance" "vm-aa1" {
-  name         = "vm-aa1"
+resource "google_compute_instance" "vm" {
+  name         = var.name
   machine_type = "f1-micro"
+  tags         = [var.name]
 
   boot_disk {
     initialize_params {
@@ -126,15 +137,11 @@ resource "google_compute_instance" "vm-aa1" {
   }
 
   network_interface {
-    subnetwork = "network-aa"
+    subnetwork = var.subnet_name
   }
-
-  depends_on = [
-    module.vpc
-  ]
 }
 ```
-To add an external IP, the network interface also contains an empty `access_config`. 
+For the webserver, I created a module `webserver_vm`. It is similar to a VM, but the network interface contains an empty `access_config`, which produces an ephemeral external IP for that VM. 
 ```
   network_interface {
     subnetwork = "network-ab"
@@ -143,6 +150,12 @@ To add an external IP, the network interface also contains an empty `access_conf
     }
   }
 ```
+It also contains a reference to the webserver startup script - 
+`metadata_startup_script = file("./modules/webserver_vm/startup.sh")`.
+
+**Requirement 3.1 - Create 4 networks**
+![Networks A](images/3-1-networks-a.png?raw=true "Networks A")
+![Networks B](images/3-1-networks-b.png?raw=true "Networks B")
 
 ---
 ## VPN
@@ -295,3 +308,7 @@ resource "google_compute_instance" "vm-ab1" {
 - https://cloud.google.com/vpc/docs/using-firewalls
 - https://cloud.google.com/network-connectivity/docs/vpn/how-to/creating-static-vpns
 - https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_instance
+
+# Part II : List of requirements
+
+
