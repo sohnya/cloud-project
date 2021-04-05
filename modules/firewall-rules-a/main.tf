@@ -14,7 +14,7 @@ resource "google_compute_firewall" "requirement_4_1_3" {
     protocol = "icmp"
   }
 
-  target_tags = ["vm-ba"]
+  target_tags = ["vm-aa"]
 }
 
 resource "google_compute_firewall" "requirement_4_1_4" {
@@ -87,7 +87,7 @@ resource "google_compute_firewall" "requirement_4_4_4" {
     ports = [22]
   }
 
-  source_ranges = ["0.0.0.0/0"] # Everyone on the internet
+  source_ranges = ["0.0.0.0/0"]
   target_tags = ["vm-ab"]
 }
 
@@ -100,7 +100,7 @@ resource "google_compute_firewall" "requirement_4_5_1" {
     ports = [80]
   }
 
-  source_tags = ["vm-bb"] # Everyone on the internet
+  source_tags = ["vm-bb"]
   target_tags = ["vm-ab"]
 }
 
@@ -112,7 +112,7 @@ resource "google_compute_firewall" "requirement_4_5_2" {
     protocol = "icmp"
   }
 
-  source_tags = ["vm-bb"] # Everyone on the internet
+  source_tags = ["vm-bb"]
   target_tags = ["vm-ab"]
 }
 
@@ -125,6 +125,6 @@ resource "google_compute_firewall" "requirement_4_5_3" {
     ports = [22]
   }
 
-  source_tags = ["vm-bb"] # Everyone on the internet
+  source_tags = ["vm-bb"]
   target_tags = ["vm-ab"]
 }

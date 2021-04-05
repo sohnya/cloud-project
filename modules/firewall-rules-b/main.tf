@@ -112,7 +112,7 @@ resource "google_compute_firewall" "requirement_4_5_2" {
     protocol = "icmp"
   }
 
-  target_tags = ["vm-ab"]
+  target_tags = ["vm-bb"]
 }
 
 resource "google_compute_firewall" "requirement_4_5_3" {
@@ -125,5 +125,18 @@ resource "google_compute_firewall" "requirement_4_5_3" {
     ports = [22]
   }
 
-  target_tags = ["vm-ab"]
+  target_tags = ["vm-bb"]
+}
+
+resource "google_compute_firewall" "requirement_4_5_4" {
+  name    = "requirement-4-5-4"
+  network = var.network
+  direction = "EGRESS"
+
+  allow {
+    protocol = "icmp"
+  }
+
+  target_tags = ["vm-bb"]
+  # how to filter it to be a specific IP only
 }
