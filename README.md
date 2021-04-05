@@ -2,12 +2,9 @@ This project is found on [github.com/sohnya/cloud-project](README.md).
 
 ## Introduction
 
-TODO: HELLO
+This repository contains the final class project for YCIT 018 - Cloud Networking & Security at McGill University. The goal of the project is to set up a simple cloud infrastructure with two VPC, four VMs, a VPN, along with a number of firewall rules. 
 
-Figure 1 outlines the network architecture for this lab project. The full project description can be found [here](project-overview.pdf)
-
-![Networks](images/architecture.png?raw=true "Networks")
-_Figure: Networks_
+The following figure (taken from the project description [here](project-overview.pdf)) outlines the expected results of the cloud infrastructure for this lab project.
 
 ![Firewalls and VPN](images/firewalls-and-vpn.png?raw=true "Firewalls and VPN")
 _Figure: Firewalls and VPN_
@@ -29,7 +26,7 @@ Terraform connects to a google cloud account using a GCP service account key (fi
 ### Project structure
 The desided project configuration had (almost) the same configuration for both sides, which is why a module `project` was created. The `project` module itself contains custom Terraform modules specific to our use case - `vm`, `webserver-vm` and `vpn`. In order to clean up the `main.tf` file, I also chose to move the firewall rules to their own modules. Since they were different between A and B, they were implemented with `firewall-rules-a` and `firewall-rules-b`. These two modules contained the firewall rules and their corresponding network connectivity tests. 
 
-The `main.tf` file looks like follows:
+The `main.tf` file looks like follows (the full file is [here](main.tf)):
 ```
 module "project-a" {
   source = "./modules/project"
@@ -66,12 +63,44 @@ module "firewall-rules-a" {
   vm_bb_ip_address = var.vm_bb_ip_address
 } 
 ```
+The `project` module contains the VPC, VM and VPN modules (will be discussed later). Note the `depends_on` arguments that are required for Terraform to build the infrastructure in the correct order.  
 
+```
+provider "google" {
+  project     = var.project_id
+  region      = var.region
+  zone        = var.zone
+  credentials = file(var.google_credentials_file)
+}
 
-- How to do Terraform for multiple projects in Google Cloud. 
-- Tearing down all modules failed - needed to add "depends_on"
-- Using variables instead of hard coding a and b everywhere :) 
+module "vpc" {
+  ... 
+}
 
+module "vm" {
+  source      = "../vm"
+  name        = "vm-${var.project_name}a"
+  subnet_name = "network-${var.project_name}a"
+  depends_on  = [module.vpc]
+}
+
+module "webserver_vm" {
+  source      = "../webserver_vm"
+  name        = "vm-${var.project_name}b"
+  subnet_name = "network-${var.project_name}b"
+  depends_on  = [module.vpc]
+}
+
+module "vpn" {
+  source = "../vpn"
+  project_name = var.project_name
+  local_static_ip_address = var.local_static_ip_address
+  remote_static_ip_address = var.remote_static_ip_address
+  vpn_shared_secret = var.vpn_shared_secret
+  vpn_destination_range = var.vpn_destination_range
+  depends_on = [module.vm]
+}
+```
 
 ### References used to get started with Terraform
 - https://registry.terraform.io/providers/hashicorp/google/latest/docs/guides/getting_started
@@ -280,7 +309,7 @@ _VPN tunnel in project B_
 
 ---
 ## Firewall rules and connectivity tests
-The firewall rules were implemented in Terraform using the resource [compute_firewall](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_firewall). Since the results are so many, I will not include the configuration for all of them in Terraform. Example configuration: 
+The firewall rules were implemented in Terraform using the resource [compute_firewall](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_firewall). Example configuration: 
 ```
 # VM-AA1 CANNOT ping VM-AB1 using Firewall rules
 resource "google_compute_firewall" "requirement_4_2_1a" {
@@ -295,6 +324,7 @@ resource "google_compute_firewall" "requirement_4_2_1a" {
   target_tags = ["vm-ab"]
 }
 ```
+The full list of firewall rules can be found in the modules [firewall-rules-a](modules/firewall-rules-a/main.tf) and [firewall-rules-b](modules/firewall-rules-b/main.tf). 
 
 The resulting rules in the UI are as follows (in projects A and B):
 
