@@ -1,8 +1,13 @@
-This project is found on [github.com/sohnya/cloud-project](README.md).
+
 
 ## Introduction
+This repository contains the final class project for YCIT 018 - Cloud Networking & Security at McGill University. The goal of the project is to set up a simple cloud infrastructure with two VPC, four VMs, a VPN, along with a number of firewall rules. To get the 10% extra points, I took on the challenge of learning Terraform at the same time as I learned GCP. It has been a fun ride, hope you enjoy!
 
-This repository contains the final class project for YCIT 018 - Cloud Networking & Security at McGill University. The goal of the project is to set up a simple cloud infrastructure with two VPC, four VMs, a VPN, along with a number of firewall rules. 
+If you are reading this from a McGill pdf upload, the project can be found on [github.com/sohnya/cloud-project](README.md).
+
+---
+
+## Goal Architecture
 
 The following figure (taken from the project description [here](project-overview.pdf)) outlines the expected results of the cloud infrastructure for this lab project.
 
@@ -11,9 +16,9 @@ _Figure: Firewalls and VPN_
 
 ---
 ## Google Cloud and Terraform
-To begin with, I set up all infrastructure manually using the google cloud console. After setting up project A, its VPN tunnel and an example firewall rule, I realized that 
-- Project B was almost exactly the same, with minor different
-- Firewall rules were error prone to set up, and fiddly to change in the UI. 
+To begin with, I set up all infrastructure manually using the Google Cloud Console. After setting up project A, its VPN tunnel and an example firewall rule, I realized that 
+- Since project B was almost exactly the same (with minor different), it would be super error prone and boring to continue
+- Especially firewall rules were error prone to set up, and fiddly to change in the UI. 
 This is why I decided to combine this project with another tool that I was interested in learning - Terraform. 
 
 The advantages of setting up the infrastructure with Terraform 
@@ -21,10 +26,10 @@ The advantages of setting up the infrastructure with Terraform
 - Mistakes are easy to find and fix
 - Repetitive tasks become less error prone and boring
 
-Terraform connects to a google cloud account using a GCP service account key (file saved locally) that is then called in `main.tf`. For more details, see [here](https://learn.hashicorp.com/tutorials/terraform/google-cloud-platform-build?in=terraform/gcp-get-started).
+I set up Terraform to connect to a Google Cloud account using a GCP service account key (file saved locally) that is then called in `main.tf`. For more details, see [here](https://learn.hashicorp.com/tutorials/terraform/google-cloud-platform-build?in=terraform/gcp-get-started).
 
 ### Project structure
-The desided project configuration had (almost) the same configuration for both sides, which is why a module `project` was created. The `project` module itself contains custom Terraform modules specific to our use case - `vm`, `webserver-vm` and `vpn`. In order to clean up the `main.tf` file, I also chose to move the firewall rules to their own modules. Since they were different between A and B, they were implemented with `firewall-rules-a` and `firewall-rules-b`. These two modules contained the firewall rules and their corresponding network connectivity tests. 
+The desided project configuration had (almost) the same configuration on both sides, which is why a module `project` was created. The `project` module itself contains custom Terraform modules specific to our use case - `vm`, `webserver-vm` and `vpn`. In order to clean up the `main.tf` file, I also chose to move the firewall rules to their own modules. Since they were different between A and B, they were implemented with `firewall-rules-a` and `firewall-rules-b`. These two modules contained the firewall rules and their corresponding network connectivity tests. 
 
 The `main.tf` file looks like follows (the full file is [here](main.tf)):
 ```
@@ -33,8 +38,8 @@ module "project-a" {
   project_id="org-a-309016"
   project_name="a"
   google_credentials_file = "/Users/sonjahiltunen/Secrets/gcloud/org-a-961b663ea9dd.json"
-  region = "us-east1"
-  zone = "us-east1-b"
+  region = var.region
+  zone = var.zone
   
   # Network
   subnet_a_ip_range = var.subnet_aa_ip_range
@@ -63,7 +68,9 @@ module "firewall-rules-a" {
   vm_bb_ip_address = var.vm_bb_ip_address
 } 
 ```
-The `project` module contains the VPC, VM and VPN modules (will be discussed later). Note the `depends_on` arguments that are required for Terraform to build the infrastructure in the correct order.  
+In order to reduce copy pasting, a main `variables.tf` file contains some of the static values of the project. 
+
+The `project` module contains the VPC, VM and VPN modules, the details of which will be discussed later. Note the `depends_on` arguments that are required for Terraform to build the infrastructure in the correct order.  
 
 ```
 provider "google" {
@@ -101,14 +108,6 @@ module "vpn" {
   depends_on = [module.vm]
 }
 ```
-
-### References used to get started with Terraform
-- https://registry.terraform.io/providers/hashicorp/google/latest/docs/guides/getting_started
-- https://learn.hashicorp.com/tutorials/terraform/google-cloud-platform-build?in=terraform/gcp-get-started
-- https://registry.terraform.io/modules/terraform-google-modules/network/google/latest. 
-- https://cloud.google.com/vpc/docs/using-firewalls
-- https://cloud.google.com/network-connectivity/docs/vpn/how-to/creating-static-vpns
-- https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_instance
 
 ---
 
@@ -209,8 +208,7 @@ For the webserver, I created a module `webserver_vm`. It is similar to a VM, but
     }
   }
 ```
-It also contains a reference to the webserver startup script - 
-`metadata_startup_script = file("./modules/webserver_vm/startup.sh")`. The startup script can be found 
+It also contains a reference to the webserver startup script - more about this later. 
 
 **Requirement 3.1 - Create 4 networks**
 ![Networks A](images/3-1-networks-a.png?raw=true "Networks A")
@@ -350,10 +348,10 @@ Each connectivity test contains more information about the route taken, which fi
 ![CT](images/ct-2.png?raw=true "CT")
 
 **Notes**
-- The firewall rules and connectivity tests are hard coded as modules `firewall-rules-a` and `firewall-rules-b`, respectively. 
+- The firewall rules and connectivity tests are hard coded in the modules `firewall-rules-a` and `firewall-rules-b`, respectively. I couldn't figure out a nicer way to setup the firewall rules in Terraform, since they are very specific to the project configuration for each side. 
 
+---
 ## Web Server
-In order to further test the firewall rules 4.4 and 4.5, I set up a dummy web server. To start a webserver at the startup of `vm-ab1` and `vm-bb1`, the project contains `startups.sh` with the following content: 
 ```
 apt update
 apt install -y apache2
@@ -368,16 +366,21 @@ To add a startup script to the VMs, we add the argument `metadata_startup_script
 resource "google_compute_instance" "vm-ab1" {
   ...
 
-  metadata_startup_script = file("startup.sh")
+  metadata_startup_script = file("./modules/webserver_vm/startup.sh")
 
   ... 
 }  
 ```
+The result of the startup script is a fun 
+
 ![Webserver](images/webserver-ab.png?raw=true "Webserver") ![Webserver](images/webserver-bb.png?raw=true "Webserver")
 
 _Figure: Web server AB: Open to the internet_ / _Web server BB: Blocked with firewall rule_
 
-## Conclusion
+Note that since `vm-bb` blocks incoming TCP traffic on port 80, the fun stuff cannot be seen from the internet. 
+
+---
+## The End
 
 
 

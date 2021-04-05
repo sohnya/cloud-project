@@ -3,8 +3,8 @@ module "project-a" {
   project_id="org-a-309016"
   project_name="a"
   google_credentials_file = "/Users/sonjahiltunen/Secrets/gcloud/org-a-961b663ea9dd.json"
-  region = "us-east1"
-  zone = "us-east1-b"
+  region = var.region
+  zone = var.zone
   
   # Network
   subnet_a_ip_range = var.subnet_aa_ip_range
