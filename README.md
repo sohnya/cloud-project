@@ -261,7 +261,7 @@ resource "google_compute_forwarding_rule" "fr_udp4500" {
 }
 ``` 
 ### VPN Tunnel
-A potentially confusing difference between the google cloud console and the Terraform module `compute_vpn_tunnel` is that the module does not contain an explicit choice of routing configuration. The routing configuration is implicitly defined with the tunnel parameters. 
+A potentially confusing difference between the Google Cloud Console and the Terraform module `compute_vpn_tunnel` is that the module does not contain an explicit choice of routing configuration. The routing configuration is implicitly defined with the tunnel parameters. 
 
 As described [here](https://cloud.google.com/network-connectivity/docs/vpn/how-to/creating-static-vpns): "When you use the Cloud Console to create a route-based tunnel, Classic VPN [...]:
   - Sets the tunnel's local and remote traffic selectors to any IP address (0.0.0.0/0).
@@ -295,7 +295,7 @@ resource "google_compute_route" "route_a" {
   next_hop_vpn_tunnel = google_compute_vpn_tunnel.tunnel.id
 }
 ```
-The static route definition show up in the Google Cloud console as
+The static route definition show up in the Google Cloud Console as
 ![route A](images/route-a.png?raw=true)
 ![route B](images/route-b.png?raw=true)
 
