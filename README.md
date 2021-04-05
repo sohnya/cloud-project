@@ -379,8 +379,3 @@ _Figure: Web server AB: Open to the internet_ / _Web server BB: Blocked with fir
 
 Note that since `vm-bb` blocks incoming TCP traffic on port 80, the fun stuff cannot be seen from the internet. 
 
----
-## The End
-
-
-
