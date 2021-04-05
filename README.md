@@ -4,10 +4,13 @@ This project is found on [github.com/sohnya/cloud-project](github.com/sohnya/clo
 
 TODO: HELLO
 
-Figure 1 outlines the required architecture for this lab project. The full project description can be found [here](project-overview.pdf)
+Figure 1 outlines the network architecture for this lab project. The full project description can be found [here](project-overview.pdf)
 
-![Alt text](images/architecture.png?raw=true "Networks")
-_Figure 1: Networks_
+![Networks](images/architecture.png?raw=true "Networks")
+_Figure: Networks_
+
+![Firewalls and VPN](images/firewalls-and-vpn.png?raw=true "Firewalls and VPN")
+_Figure: Firewalls and VPN_
 
 ---
 ## Google Cloud and Terraform
@@ -20,6 +23,8 @@ The advantages of setting up the infrastructure with Terraform
 - All configuration is in one place (easy to find especially for beginner)
 - Mistakes are easy to find and fix
 - Repetitive tasks become less error prone and boring
+
+Terraform connects to a google cloud account using a GCP service account key (file saved locally) that is then called in `main.tf`. For more details, see [here](https://learn.hashicorp.com/tutorials/terraform/google-cloud-platform-build?in=terraform/gcp-get-started).
 
 ### Project structure
 The desided project configuration had (almost) the same configuration for both sides, which is why a module `project` was created. The `project` module itself contains custom Terraform modules specific to our use case - `vm`, `webserver-vm` and `vpn`. In order to clean up the `main.tf` file, I also chose to move the firewall rules to their own modules. Since they were different between A and B, they were implemented with `firewall-rules-a` and `firewall-rules-b`. These two modules contained the firewall rules and their corresponding network connectivity tests. 
@@ -66,17 +71,15 @@ module "firewall-rules-a" {
 - How to do Terraform for multiple projects in Google Cloud. 
 - Tearing down all modules failed - needed to add "depends_on"
 - Using variables instead of hard coding a and b everywhere :) 
-- Adding Google Cloud credentials in main.tf
-    - "A GCP service account key: Terraform will access your GCP account by using a service account key. Create one now in the console. When creating the key, use the following settings... [see more here](https://learn.hashicorp.com/tutorials/terraform/google-cloud-platform-build?in=terraform/gcp-get-started)
 
-### Terraform references
+
+### References used to get started with Terraform
 - https://registry.terraform.io/providers/hashicorp/google/latest/docs/guides/getting_started
 - https://learn.hashicorp.com/tutorials/terraform/google-cloud-platform-build?in=terraform/gcp-get-started
-- See an [example module](https://registry.terraform.io/modules/terraform-google-modules/network/google/latest). 
-
-
-### What do I want to do 
-- Run root module 
+- https://registry.terraform.io/modules/terraform-google-modules/network/google/latest. 
+- https://cloud.google.com/vpc/docs/using-firewalls
+- https://cloud.google.com/network-connectivity/docs/vpn/how-to/creating-static-vpns
+- https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_instance
 
 ---
 
@@ -181,28 +184,23 @@ For the webserver, I created a module `webserver_vm`. It is similar to a VM, but
   }
 ```
 It also contains a reference to the webserver startup script - 
-`metadata_startup_script = file("./modules/webserver_vm/startup.sh")`.
+`metadata_startup_script = file("./modules/webserver_vm/startup.sh")`. The startup script can be found 
 
 **Requirement 3.1 - Create 4 networks**
 ![Networks A](images/3-1-networks-a.png?raw=true "Networks A")
 ![Networks B](images/3-1-networks-b.png?raw=true "Networks B")
 
 ---
+
 ## VPN
 
-**Requirement 4.1 - VVM-AA1 & VM-BA1**
-- Only use Private IP (Not directly accessible from Internet)
-- Communicate together using a router with static routes & VPN Gateway to encrypt communication
+**Requirement 4.1**
 
-**Open questions**
-- What is a forwarding rule in a VPN?
-- What is the difference between static routing and policy based routing? 
-
-Classic VPN. The service in Google is called 
+The VMs `vm-aa` and `vm-ba` only have private IP addresses. They are not directly accessible from the internet. The communicate together using a router with static routes and a VPN gateway. 
 
 ### VPN Gateway
 
-The VPN was set up using the modules [compute_vpn_gateway](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_vpn_gateway)
+The VPN gateway is created using the module [compute_vpn_gateway](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_vpn_gateway), as follows: 
 
 ```
 resource "google_compute_vpn_gateway" "gateway_a" {
@@ -213,44 +211,45 @@ resource "google_compute_vpn_gateway" "gateway_a" {
   ]
 }
 ```
-The Google Cloud UI automatically creates the necessary forwarding rules when we select a classic VPN. This is not the case for the Terraform configuration - the forwarding rules have to be explicitly created as follows: 
+**Note**: The Google Cloud UI automatically creates the necessary forwarding rules when we select a classic VPN in the UI. This is not the case for the Terraform module - the forwarding rules have to be explicitly created as follows: 
 ```
 resource "google_compute_forwarding_rule" "fr_esp" {
   name        = "forwarding-rule-esp"
   ip_protocol = "ESP"
-  ip_address  = var.vpn_gateway_a_static_ip
-  target      = google_compute_vpn_gateway.gateway_a.id
+  ip_address  = var.local_static_ip_address
+  target      = google_compute_vpn_gateway.gateway.id
 }
 
 resource "google_compute_forwarding_rule" "fr_udp500" {
   name        = "forwarding-rule-udp500"
   ip_protocol = "UDP"
   port_range  = "500"
-  ip_address  = var.vpn_gateway_a_static_ip
-  target      = google_compute_vpn_gateway.gateway_a.id
+  ip_address  = var.local_static_ip_address
+  target      = google_compute_vpn_gateway.gateway.id
 }
 
 resource "google_compute_forwarding_rule" "fr_udp4500" {
   name        = "forwarding-rule-udp4500"
   ip_protocol = "UDP"
   port_range  = "4500"
-  ip_address  = var.vpn_gateway_a_static_ip
-  target      = google_compute_vpn_gateway.gateway_a.id
+  ip_address  = var.local_static_ip_address
+  target      = google_compute_vpn_gateway.gateway.id
 }
 ``` 
-
 ### VPN Tunnel
-The Terraform module does not contain an explicit choice of routing configuration. As described [here](https://cloud.google.com/network-connectivity/docs/vpn/how-to/creating-static-vpns): "When you use the Cloud Console to create a route-based tunnel, Classic VPN [...]:
+A potentially confusing difference between the google cloud console and the Terraform module `compute_vpn_tunnel` is that the module does not contain an explicit choice of routing configuration. The routing configuration is implicitly defined with the tunnel parameters. 
+
+As described [here](https://cloud.google.com/network-connectivity/docs/vpn/how-to/creating-static-vpns): "When you use the Cloud Console to create a route-based tunnel, Classic VPN [...]:
   - Sets the tunnel's local and remote traffic selectors to any IP address (0.0.0.0/0).
-  - For each range in Remote network IP ranges, ccreates a custom static route whose destination (prefix) is the range's CIDR and whose next hop is the tunnel."
+  - For each range in Remote network IP ranges, creates a custom static route whose destination (prefix) is the range's CIDR and whose next hop is the tunnel."
 
 The [compute_vpn_tunnel](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_vpn_tunnel) was therefore set up as follows:
 ```
-resource "google_compute_vpn_tunnel" "tunnel_a" {
-  name               = "tunnel-a"
-  peer_ip            = var.vpn_gateway_b_static_ip
-  shared_secret      = var.shared_secret
-  target_vpn_gateway = google_compute_vpn_gateway.gateway_a.id
+resource "google_compute_vpn_tunnel" "tunnel" {
+  name               = "tunnel-${var.project_name}"
+  peer_ip            = var.remote_static_ip_address
+  shared_secret      = var.vpn_shared_secret
+  target_vpn_gateway = google_compute_vpn_gateway.gateway.id
 
   local_traffic_selector  = ["0.0.0.0/0"]
   remote_traffic_selector = ["0.0.0.0/0"]
@@ -265,13 +264,17 @@ resource "google_compute_vpn_tunnel" "tunnel_a" {
 and the static route added as
 ```
 resource "google_compute_route" "route_a" {
-  name                = "route-a"
-  network             = "vpc-a"
-  dest_range          = "10.1.10.0/24"
+  name                = "route-${var.project_name}"
+  network             = "vpc-${var.project_name}"
+  dest_range          = var.vpn_destination_range
   priority            = 1000
-  next_hop_vpn_tunnel = google_compute_vpn_tunnel.tunnel_a.id
+  next_hop_vpn_tunnel = google_compute_vpn_tunnel.tunnel.id
 }
 ```
+
+The following screenshots show the working configuration of the VPN tunnel:
+
+
 ![VPN-A](images/vpn-a.png?raw=true)
 _VPN tunnel in project A_
 
@@ -279,7 +282,7 @@ _VPN tunnel in project A_
 _VPN tunnel in project B_
 
 ---
-## Firewall rules
+## Firewall rules and connectivity tests
 The firewall rules were implemented in Terraform using the resource [compute_firewall](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_firewall). Since the results are so many, I will not include the configuration for all of them in Terraform. Example configuration: 
 ```
 # VM-AA1 CANNOT ping VM-AB1 using Firewall rules
@@ -296,7 +299,7 @@ resource "google_compute_firewall" "requirement_4_2_1a" {
 }
 ```
 
-The rules were configured as follows (in projects A and B):
+The resulting rules in the UI are as follows (in projects A and B):
 
 ![Firewall rules A](images/firewall-rules-a.png?raw=true "Firewall rules A")
 _Figure: Firewall rules in org-a_
@@ -305,7 +308,9 @@ _Figure: Firewall rules in org-a_
 _Figure: Firewall rules in org-b_
 
 
-To test the the configuration works as expected, I used the [network_management_connectivity_test](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/network_management_connectivity_test_resource) module in Terraform. Below are screenshots of the connectivity test results. 
+To test the the configuration works as expected, I used the a connectivity test from the `Network Connectivity` tool in Google Cloud, and it's corresponding Terraform module ([network_management_connectivity_test](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/network_management_connectivity_test_resource)). 
+
+Below are screenshots of the connectivity test results. 
 
 ![Connectivity tests A](images/connectivity-a.png?raw=true "Connectivity tests A")
 _Figure: Connectivity tests in org-a_
@@ -337,18 +342,7 @@ resource "google_compute_instance" "vm-ab1" {
 ```
 ![Webserver](images/webserver-ab.png?raw=true "Webserver") ![Webserver](images/webserver-bb.png?raw=true "Webserver")
 
-_Web server AB: Open to the internet_ / _Web server BB: Blocked with firewall rule_
-
-
-
----
-## Additional reading
-- https://cloud.google.com/vpc/docs/using-firewalls
-- https://cloud.google.com/network-connectivity/docs/vpn/how-to/creating-static-vpns
-- https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_instance
-
-# Part II : List of requirements
-
+_Figure: Web server AB: Open to the internet_ / _Web server BB: Blocked with firewall rule_
 
 
 
