@@ -1,4 +1,4 @@
-This project is found on [github.com/sohnya/cloud-project](github.com/sohnya/cloud-project).
+This project is found on [github.com/sohnya/cloud-project](README.md).
 
 ## Introduction
 
