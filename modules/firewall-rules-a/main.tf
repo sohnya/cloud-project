@@ -7,19 +7,19 @@ provider "google" {
 
 resource "google_compute_firewall" "requirement_4_1_3" {
   name    = "requirement-4-1-3"
-  network = "vpc-a"
+  network = var.network
+  direction = "EGRESS"
 
   allow {
     protocol = "icmp"
   }
 
-  source_tags = ["vm-aa"] 
   target_tags = ["vm-ba"]
 }
 
 resource "google_compute_firewall" "requirement_4_1_4" {
   name    = "requirement-4-1-4"
-  network = "vpc-a"
+  network = var.network
 
   deny {
     protocol = "icmp"
@@ -29,9 +29,21 @@ resource "google_compute_firewall" "requirement_4_1_4" {
   target_tags = ["vm-aa"]
 }
 
+resource "google_compute_firewall" "requirement_4_2_1a" {
+  name    = "requirement-4-2-1a"
+  network = var.network
+
+  deny {
+    protocol = "icmp"
+  }
+
+  source_tags = ["vm-aa"] 
+  target_tags = ["vm-ab"]
+}
+
 resource "google_compute_firewall" "requirement_4_2_1b" {
   name    = "requirement-4-2-1b"
-  network = "vpc-a"
+  network = var.network
 
   deny {
     protocol = "icmp"
@@ -43,7 +55,7 @@ resource "google_compute_firewall" "requirement_4_2_1b" {
 
 resource "google_compute_firewall" "requirement_4_4_1" {
   name    = "requirement-4-4-1"
-  network = "vpc-a"
+  network = var.network
 
   allow {
     protocol = "tcp"
@@ -56,7 +68,7 @@ resource "google_compute_firewall" "requirement_4_4_1" {
 
 resource "google_compute_firewall" "requirement_4_4_3" {
   name    = "requirement-4-4-3"
-  network = "vpc-a"
+  network = var.network
 
   allow {
     protocol = "icmp"
@@ -68,7 +80,7 @@ resource "google_compute_firewall" "requirement_4_4_3" {
 
 resource "google_compute_firewall" "requirement_4_4_4" {
   name    = "requirement-4-4-4"
-  network = "vpc-a"
+  network = var.network
 
   deny {
     protocol = "tcp"
@@ -81,7 +93,7 @@ resource "google_compute_firewall" "requirement_4_4_4" {
 
 resource "google_compute_firewall" "requirement_4_5_1" {
   name    = "requirement-4-5-1"
-  network = "vpc-a"
+  network = var.network
 
   deny {
     protocol = "tcp"
@@ -94,7 +106,7 @@ resource "google_compute_firewall" "requirement_4_5_1" {
 
 resource "google_compute_firewall" "requirement_4_5_2" {
   name    = "requirement-4-5-2"
-  network = "vpc-a"
+  network = var.network
 
   allow {
     protocol = "icmp"
@@ -106,7 +118,7 @@ resource "google_compute_firewall" "requirement_4_5_2" {
 
 resource "google_compute_firewall" "requirement_4_5_3" {
   name    = "requirement-4-5-3"
-  network = "vpc-a"
+  network = var.network
 
   allow {
     protocol = "tcp"

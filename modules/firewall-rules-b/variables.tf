@@ -4,16 +4,21 @@ variable "project_id" {
 }
 
 variable "google_credentials_file" {
-    description = "Path to the google credentials json file"
-    type = string
+  description = "Path to the google credentials json file"
+  type        = string
 }
 
 variable "region" {
-    description = "The region this project should be created in"
-    type = string
+  description = "The region this project should be created in"
+  type        = string
 }
 
 variable "zone" {
-    description = "The zone this project should be created in"
-    type = string
+  description = "The zone this project should be created in"
+  type        = string
+}
+
+variable "network" {
+  description = "The VPC for which the rule applies"
+  type        = string
 }

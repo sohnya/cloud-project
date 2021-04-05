@@ -17,3 +17,8 @@ variable "zone" {
     description = "The zone this project should be created in"
     type = string
 }
+
+variable "network" {
+  description = "The VPC for which the rule applies"
+  type        = string
+}
