@@ -305,7 +305,7 @@ _Figure: Firewall rules in org-a_
 _Figure: Firewall rules in org-b_
 
 
-To test the the configuration works as expected, I used the a connectivity test from the `Network Connectivity` tool in Google Cloud, and it's corresponding Terraform module ([network_management_connectivity_test](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/network_management_connectivity_test_resource)). 
+To test the the configuration works as expected, I set up [connectivity tests](https://cloud.google.com/network-intelligence-center/docs/connectivity-tests) from the Network Connectivity tool in GCP, and it's corresponding Terraform module ([network_management_connectivity_test](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/network_management_connectivity_test_resource)). 
 
 Below are screenshots of the connectivity test results. 
 
@@ -315,6 +315,12 @@ _Figure: Connectivity tests in org-a_
 ![Connectivity tests B](images/connectivity-b.png?raw=true "Connectivity tests B")
 _Figure: Connectivity tests in org-b_
 
+Each connectivity test contains more information about the route taken, which firewall rule was used etc. Below is an example for `bb-can-ping-ba`
+
+![CT](images/ct-2.png?raw=true "CT")
+
+**Notes**
+- The firewall rules and connectivity tests are hard coded as modules `firewall-rules-a` and `firewall-rules-b`, respectively. 
 
 ## Web Server
 In order to further test the firewall rules 4.4 and 4.5, I set up a dummy web server. To start a webserver at the startup of `vm-ab1` and `vm-bb1`, the project contains `startups.sh` with the following content: 
@@ -340,6 +346,8 @@ resource "google_compute_instance" "vm-ab1" {
 ![Webserver](images/webserver-ab.png?raw=true "Webserver") ![Webserver](images/webserver-bb.png?raw=true "Webserver")
 
 _Figure: Web server AB: Open to the internet_ / _Web server BB: Blocked with firewall rule_
+
+## Conclusion
 
 
 
