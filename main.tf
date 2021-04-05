@@ -29,6 +29,8 @@ module "firewall-rules-a" {
   subnet_ab_ip_range = var.subnet_ab_ip_range
   subnet_ba_ip_range = var.subnet_ba_ip_range
   subnet_bb_ip_range = var.subnet_bb_ip_range
+  vm_ab_ip_address = var.vm_ab_ip_address
+  vm_bb_ip_address = var.vm_bb_ip_address
 } 
 
 module "project-b" {
@@ -62,4 +64,6 @@ module "firewall-rules-b" {
   subnet_ab_ip_range = var.subnet_ab_ip_range
   subnet_ba_ip_range = var.subnet_ba_ip_range
   subnet_bb_ip_range = var.subnet_bb_ip_range
+  vm_ab_ip_address = var.vm_ab_ip_address
+  vm_bb_ip_address = var.vm_bb_ip_address
 } 

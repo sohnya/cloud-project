@@ -46,7 +46,7 @@ resource "google_compute_firewall" "requirement_4_3_1b" {
 
 # Internet CANNOT HTTP on port TCP-80 to VM-BB1 Public IP address
 resource "google_compute_firewall" "requirement_4_4_2" {
-  name    = "r4-4-2-internet-cannot-http-8-bb-public"
+  name    = "r4-4-2-internet-cannot-http-80-bb-public"
   network = var.network
 
   deny {
@@ -97,37 +97,9 @@ resource "google_compute_firewall" "requirement_4_5_1" {
   }
 
   target_tags = ["vm-bb"]
-  destination_ranges = ["35.231.62.201"]
+  destination_ranges = [var.vm_ab_ip_address]
 }
 
-# VM-BB1 (using Public Internet) CAN ping to VM-AB1 Public IP address
-resource "google_compute_firewall" "requirement_4_5_2" {
-  name    = "r4-5-2-bb-can-ping-ab-public"
-  network = var.network
-  direction = "EGRESS"
-
-  allow {
-    protocol = "icmp"
-  }
-
-  target_tags = ["vm-bb"]
-  destination_ranges = ["35.231.62.201"]
-}
-
-# VM-BB1 (using Public Internet) CAN SSH to VM-AB1 Public IP address
-resource "google_compute_firewall" "requirement_4_5_3" {
-  name    = "r4-5-3-bb1-can-ssh-ab-public"
-  network = var.network
-  direction = "EGRESS"
-
-  allow {
-    protocol = "tcp"
-    ports = [22]
-  }
-
-  target_tags = ["vm-bb"]
-  destination_ranges = ["35.231.62.201"]
-}
 
 # VM-BB1 (using Public Internet) CANNOT ping 8.8.8.8 (Google's Public DNS)
 resource "google_compute_firewall" "requirement_4_5_4" {
@@ -220,7 +192,7 @@ resource "google_network_management_connectivity_test" "r4-4-2" {
   }
 
   destination {
-      ip_address = "35.231.103.20"
+      ip_address = var.vm_bb_ip_address
       port = 80
   }
 
@@ -235,7 +207,7 @@ resource "google_network_management_connectivity_test" "r4-4-3" {
   }
 
   destination {
-      ip_address = "35.231.103.20"
+      ip_address = var.vm_bb_ip_address
   }
 
   protocol = "ICMP"
@@ -249,7 +221,7 @@ resource "google_network_management_connectivity_test" "r4-4-4" {
   }
 
   destination {
-      ip_address = "35.231.103.20"
+      ip_address = var.vm_bb_ip_address
       port = 22
   }
 
@@ -265,7 +237,7 @@ resource "google_network_management_connectivity_test" "r4-5-1" {
   }
 
   destination {
-      ip_address = "35.231.62.201"
+      ip_address = var.vm_ab_ip_address
       port = 80
   }
 
@@ -280,7 +252,7 @@ resource "google_network_management_connectivity_test" "r4-5-2" {
   }
 
   destination {
-      ip_address = "35.231.62.201"
+      ip_address = var.vm_ab_ip_address
   }
 
   protocol = "ICMP"
@@ -294,7 +266,7 @@ resource "google_network_management_connectivity_test" "r4-5-3" {
   }
 
   destination {
-      ip_address = "35.231.62.201"
+      ip_address = var.vm_ab_ip_address
       port = 22
   }
 

@@ -42,3 +42,13 @@ variable "subnet_bb_ip_range" {
   type    = string
   default = "10.1.20.0/24"
 }
+
+variable "vm_ab_ip_address" {
+  type = string
+  default = "35.196.103.196"
+}
+
+variable "vm_bb_ip_address" {
+  type = string
+  default = "35.227.60.126"
+}

@@ -5,19 +5,6 @@ provider "google" {
   credentials = file(var.google_credentials_file)
 }
 
-# VM-AA1 CAN ping VM-BA1 using Firewall rules
-resource "google_compute_firewall" "requirement_4_1_3" {
-  name    = "r4-1-3-aa-can-ping-ba"
-  network = var.network
-  direction = "EGRESS"
-
-  allow {
-    protocol = "icmp"
-  }
-
-  target_tags = ["vm-aa"]
-}
-
 # VM-BA1 CANNOT ping VM-AA1 using Firewall rules
 resource "google_compute_firewall" "requirement_4_1_4" {
   name    = "r4-1-4-ba-cannot-ping-aa"
@@ -170,7 +157,7 @@ resource "google_network_management_connectivity_test" "r4-4-1" {
   }
 
   destination {
-      ip_address = "35.231.62.201"
+      ip_address = var.vm_ab_ip_address
       port = 80
   }
 
@@ -185,7 +172,7 @@ resource "google_network_management_connectivity_test" "r4-4-3" {
   }
 
   destination {
-      ip_address = "35.231.62.201"
+      ip_address = var.vm_ab_ip_address
   }
 
   protocol = "ICMP"
@@ -199,7 +186,7 @@ resource "google_network_management_connectivity_test" "r4-4-4" {
   }
 
   destination {
-      ip_address = "35.231.62.201"
+      ip_address = var.vm_ab_ip_address
       port = 22
   }
 

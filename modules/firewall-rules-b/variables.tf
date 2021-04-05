@@ -38,3 +38,11 @@ variable "subnet_ba_ip_range" {
 variable "subnet_bb_ip_range" {
   type    = string
 }
+
+variable "vm_ab_ip_address" {
+  type = string
+}
+
+variable "vm_bb_ip_address" {
+  type = string
+}
