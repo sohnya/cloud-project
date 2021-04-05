@@ -24,6 +24,11 @@ module "firewall-rules-a" {
   region = var.region
   zone = var.zone
   network = "vpc-a"
+
+  subnet_aa_ip_range = var.subnet_aa_ip_range
+  subnet_ab_ip_range = var.subnet_ab_ip_range
+  subnet_ba_ip_range = var.subnet_ba_ip_range
+  subnet_bb_ip_range = var.subnet_bb_ip_range
 } 
 
 module "project-b" {
@@ -52,4 +57,9 @@ module "firewall-rules-b" {
   region = var.region
   zone = var.zone
   network = "vpc-b"
+
+  subnet_aa_ip_range = var.subnet_aa_ip_range
+  subnet_ab_ip_range = var.subnet_ab_ip_range
+  subnet_ba_ip_range = var.subnet_ba_ip_range
+  subnet_bb_ip_range = var.subnet_bb_ip_range
 } 

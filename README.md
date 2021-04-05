@@ -318,4 +318,11 @@ resource "google_compute_instance" "vm-ab1" {
 
 # Part II : List of requirements
 
+## Connectivity test
+org-a: https://console.cloud.google.com/net-intelligence/connectivity/tests/list?authuser=1&organizationId=397674274413&project=org-a-309016
+org-b: 
+
+Challenges encountered: 
+- Using the same Terraform machine user on both projects (permissions denied to create network test)
+
 

@@ -22,3 +22,18 @@ variable "network" {
   description = "The VPC for which the rule applies"
   type        = string
 }
+variable "subnet_aa_ip_range" {
+  type    = string
+}
+
+variable "subnet_ab_ip_range" {
+  type    = string
+}
+
+variable "subnet_ba_ip_range" {
+  type    = string
+}
+
+variable "subnet_bb_ip_range" {
+  type    = string
+}
