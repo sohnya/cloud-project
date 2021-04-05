@@ -295,9 +295,11 @@ resource "google_compute_route" "route_a" {
   next_hop_vpn_tunnel = google_compute_vpn_tunnel.tunnel.id
 }
 ```
+The static route definition show up in the Google Cloud console as
+![route A](images/route-a.png?raw=true)
+![route B](images/route-b.png?raw=true)
 
 The following screenshots show the working configuration of the VPN tunnel:
-
 
 ![VPN-A](images/vpn-a.png?raw=true)
 _VPN tunnel in project A_
