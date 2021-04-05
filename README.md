@@ -2,7 +2,7 @@
 
 This repository contains the final class project for YCIT 018 - Cloud Networking & Security at McGill University. The goal of the project is to set up a simple cloud infrastructure with two VPC, four VMs, a VPN, along with a number of firewall rules. To get the 10% extra points, I took on the challenge of learning Terraform at the same time as I learned GCP. It has been a fun and challenging ride!
 
-If you are reading this from a McGill pdf upload, the repository is found on [github.com/sohnya/cloud-project](README.md).
+If you are reading this from a McGill pdf upload, the repository and all Terraform code is found on [github.com/sohnya/cloud-project](README.md).
 
 ---
 
@@ -33,7 +33,7 @@ I set up Terraform to connect to a Google Cloud account using a GCP service acco
 
 ### Project structure
 
-The desided project configuration had (almost) the same configuration on both sides, which is why a module `project` was created. The `project` module itself contains custom Terraform modules specific to our use case - `vm`, `webserver-vm` and `vpn`. In order to clean up the `main.tf` file, I also chose to move the firewall rules to their own modules. Since they were different between A and B, they were implemented with `firewall-rules-a` and `firewall-rules-b`. These two modules contained the firewall rules and their corresponding network connectivity tests.
+The desired project configuration had (almost) the same configuration on both sides, which is why a module `project` was created. The `project` module itself contains custom Terraform modules specific to our use case - `vm`, `webserver-vm` and `vpn`. In order to clean up the `main.tf` file, I also chose to move the firewall rules to their own modules. Since they were different between A and B, they were implemented with `firewall-rules-a` and `firewall-rules-b`. These two modules contained the firewall rules and their corresponding network connectivity tests.
 
 The `main.tf` file looks like follows (the full file is [here](main.tf)):
 
@@ -159,7 +159,7 @@ A similar setup has been done for project B.
 **Notes**
 
 - Note the service account for Terraform. This was added in the [API credentials section](https://console.cloud.google.com/apis/credentials) in the cloud console (following the guidelines [here](https://registry.terraform.io/providers/hashicorp/google/latest/docs/guides/getting_started)).
-- If I had more time, I would have looked into reducing the permissions so that they are specific to our use case. The required roles were very wide and do not follow the least priviledge principle. We want to [use IAM securely](https://cloud.google.com/iam/docs/using-iam-securely).
+- If I had more time, I would have looked into reducing the permissions so that they are specific to our use case. The required roles were very wide and do not follow the least privilege principle. We want to [use IAM securely](https://cloud.google.com/iam/docs/using-iam-securely).
 - I ran `terraform apply` as an owner. The Terraform project structure could have been optimized so that different teams (with different roles / permissions) can easily use Terraform separate. This is for an advanced use case with Terraform that I will save for later.
 
 ---
