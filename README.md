@@ -1,4 +1,4 @@
-github.com/sohnya/cloud-project
+This project is found on [github.com/sohnya/cloud-project](github.com/sohnya/cloud-project).
 
 ## Introduction
 
@@ -9,27 +9,60 @@ Figure 1 outlines the required architecture for this lab project. The full proje
 ![Alt text](images/architecture.png?raw=true "Networks")
 _Figure 1: Networks_
 
-**Table of contents**
-- [Terraform](##Terraform)
-- [Networks and VMs](##Networks-and-VMs)
-- [VPN](##VPN)
-- [Firewall Rules](##Firewall-rules)
-- [Web Server Setup](##Web-Server-Setup)
-
 ---
-## Terraform
+## Google Cloud and Terraform
+To begin with, I set up all infrastructure manually using the google cloud console. After setting up project A, its VPN tunnel and an example firewall rule, I realized that 
+- Project B was almost exactly the same, with minor different
+- Firewall rules were error prone to set up, and fiddly to change in the UI. 
+This is why I decided to combine this project with another tool that I was interested in learning - Terraform. 
 
-One way of setting up Google Cloud infrastructure is using [Terraform google-modules](https://registry.terraform.io/namespaces/terraform-google-modules). A Google Virtual Private Network (VPC), Subnets within the VPC, etc. 
+The advantages of setting up the infrastructure with Terraform 
+- All configuration is in one place (easy to find especially for beginner)
+- Mistakes are easy to find and fix
+- Repetitive tasks become less error prone and boring
 
-- Note: I am a first time user
-- First did everything manually, then switched to terraform 
-- This readme will contain selected portions of the configuration code 
+### Project structure
+The desided project configuration had (almost) the same configuration for both sides, which is why a module `project` was created. The `project` module itself contains custom Terraform modules specific to our use case - `vm`, `webserver-vm` and `vpn`. In order to clean up the `main.tf` file, I also chose to move the firewall rules to their own modules. Since they were different between A and B, they were implemented with `firewall-rules-a` and `firewall-rules-b`. These two modules contained the firewall rules and their corresponding network connectivity tests. 
 
-### Advantages
-- Easy to tear down
-- Less error prone and boring
+The `main.tf` file looks like follows:
+```
+module "project-a" {
+  source = "./modules/project"
+  project_id="org-a-309016"
+  project_name="a"
+  google_credentials_file = "/Users/sonjahiltunen/Secrets/gcloud/org-a-961b663ea9dd.json"
+  region = "us-east1"
+  zone = "us-east1-b"
+  
+  # Network
+  subnet_a_ip_range = var.subnet_aa_ip_range
+  subnet_b_ip_range = var.subnet_ab_ip_range
 
-### Challenges encountered
+  ## VPN
+  local_static_ip_address = var.a_static_ip
+  remote_static_ip_address = var.b_static_ip
+  vpn_destination_range = var.subnet_ba_ip_range
+  vpn_shared_secret = var.vpn_shared_secret
+}
+
+module "firewall-rules-a" {
+  source = "./modules/firewall-rules-a"
+  project_id="org-a-309016"
+  google_credentials_file = "/Users/sonjahiltunen/Secrets/gcloud/org-a-961b663ea9dd.json"
+  region = var.region
+  zone = var.zone
+  network = "vpc-a"
+
+  subnet_aa_ip_range = var.subnet_aa_ip_range
+  subnet_ab_ip_range = var.subnet_ab_ip_range
+  subnet_ba_ip_range = var.subnet_ba_ip_range
+  subnet_bb_ip_range = var.subnet_bb_ip_range
+  vm_ab_ip_address = var.vm_ab_ip_address
+  vm_bb_ip_address = var.vm_bb_ip_address
+} 
+```
+
+
 - How to do Terraform for multiple projects in Google Cloud. 
 - Tearing down all modules failed - needed to add "depends_on"
 - Using variables instead of hard coding a and b everywhere :) 
@@ -42,30 +75,26 @@ One way of setting up Google Cloud infrastructure is using [Terraform google-mod
 - See an [example module](https://registry.terraform.io/modules/terraform-google-modules/network/google/latest). 
 
 
-
 ### What do I want to do 
 - Run root module 
 
 ---
 
 ## Projects
-**Requirement 1.1**: The first lab requirement was to create two projects to represent sides A and B of the architecture diagram. This was done in the Google Cloud UI. 
+**Requirement 1.1**: The first lab requirement was to create two projects to represent sides A and B of the architecture diagram. The two projects were created in the Google Cloud UI. 
+
 ![Projects](images/1.1-projects.png?raw=true "Projects")
 
+_Figure: Two projects in my organization_
+
 ## IAM
+In order to add users, I created an organization related to the sonjahiltunen.com domain, and added four new users 
+- project.owner@sonjahiltunen.com
+- compute.admin@sonjahiltunen.com
+- security.admin@sonjahiltunen.com
+- network.admin@sonjahiltunen.com
 
-The main account for this
-
-- Describe your role assignments and the expected results in your Lab documents for each account
-
-We want to [use IAM securely](https://cloud.google.com/iam/docs/using-iam-securely). In our organization, we have [separate network and security teams](https://cloud.google.com/iam/docs/job-functions/networking#separate_network_security_teams). 
-
-
-Using [predefined roles](https://cloud.google.com/iam/docs/understanding-roles#predefined_roles). 
-
-Can also be setup in Terraform but was done manually. 
-
-**Roles**
+The users were then added to the projects and given roles according to what they should be able to do with the resources in the projects. These are the roles, users and required permissions (taken from role definitions in [predefined roles](https://cloud.google.com/iam/docs/understanding-roles#predefined_roles)):
 * Project Owner `roles/owner` project.owner@sonjahiltunen.com
     - All editor permissions
     and permissions to:
@@ -78,16 +107,17 @@ Can also be setup in Terraform but was done manually.
 * Network Management Admin `roles/networkmanagement.admin` network.admin@sonjahiltunen.com
     - Full access to Network Management resources.
 
+The main account (sonja@sonjahiltunen.com) is kept intact (with maximum permissions), as per the lab requirements. 
+
 **Requirement 1.2**
-- The IAM roles for the accounts were assigned in the IAM section of the cloud console. 
-- The main account is kept intact (with maximum permissions), as per the lab requirements. 
-- The four required roles can be seen in the screenshot below. Notice that there is also a service account for Terraform. This was added in the [API credentials section](https://console.cloud.google.com/apis/credentials) in the cloud console (following the guidelines [here](https://registry.terraform.io/providers/hashicorp/google/latest/docs/guides/getting_started)). 
+- The four required roles can be seen in the screenshot below. 
 ![IAM](images/1-2-iam.png?raw=true "IAM")
 
-TODO: 
-- If I run `terraform apply` with limited permissions, will it update what I have access to (or completely fail)? Do I need to divide the `main.tf` file into several files? 
-- Describe your role assignments and the expected results in your Lab documents for each account. 
 
+**Notes**
+- There is also a service account for Terraform. This was added in the [API credentials section](https://console.cloud.google.com/apis/credentials) in the cloud console (following the guidelines [here](https://registry.terraform.io/providers/hashicorp/google/latest/docs/guides/getting_started)). 
+- If I had more time, I would have looked into reducing the permissions so that they are specific to our use case. The required roles were very wide and do not follow the least priviledge principle. We want to [use IAM securely](https://cloud.google.com/iam/docs/using-iam-securely). 
+- I ran `terraform apply` as an owner. The Terraform project structure could have been optimized so that different teams (with different roles / permissions) can easily use Terraform separate. This is for an advanced use case with Terraform that I will save for later. 
 ---
 ## Networks and VMs
 
@@ -242,13 +272,31 @@ resource "google_compute_route" "route_a" {
   next_hop_vpn_tunnel = google_compute_vpn_tunnel.tunnel_a.id
 }
 ```
+![VPN-A](images/vpn-a.png?raw=true)
+_VPN tunnel in project A_
+
+![VPN-A](images/vpn-b.png?raw=true)
+_VPN tunnel in project B_
 
 ---
 ## Firewall rules
+The firewall rules were implemented in Terraform using the resource [compute_firewall](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_firewall). Since the results are so many, I will not include the configuration for all of them in Terraform. Example configuration: 
+```
+# VM-AA1 CANNOT ping VM-AB1 using Firewall rules
+resource "google_compute_firewall" "requirement_4_2_1a" {
+  name    = "r4-2-1a-aa-cannot-ping-ab"
+  network = var.network
 
-TODO: How is priority used in Firewall rules? 
+  deny {
+    protocol = "icmp"
+  }
 
-The firewall rules were implemented in Terraform using the resource [compute_firewall](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_firewall). Table 1 contains the requirements for the firewall rules. 
+  source_tags = ["vm-aa"] 
+  target_tags = ["vm-ab"]
+}
+```
+
+The rules were configured as follows (in projects A and B):
 
 ![Firewall rules A](images/firewall-rules-a.png?raw=true "Firewall rules A")
 _Figure: Firewall rules in org-a_
@@ -257,12 +305,7 @@ _Figure: Firewall rules in org-a_
 _Figure: Firewall rules in org-b_
 
 
-## Connectivity test
-org-a: https://console.cloud.google.com/net-intelligence/connectivity/tests/list?authuser=1&organizationId=397674274413&project=org-a-309016
-org-b: 
-
-Challenges encountered: 
-- Using the same Terraform machine user on both projects (permissions denied to create network test)
+To test the the configuration works as expected, I used the [network_management_connectivity_test](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/network_management_connectivity_test_resource) module in Terraform. Below are screenshots of the connectivity test results. 
 
 ![Connectivity tests A](images/connectivity-a.png?raw=true "Connectivity tests A")
 _Figure: Connectivity tests in org-a_
@@ -292,7 +335,11 @@ resource "google_compute_instance" "vm-ab1" {
   ... 
 }  
 ```
-![Webserver](images/webserver.png?raw=true "Webserver")
+![Webserver](images/webserver-ab.png?raw=true "Webserver") ![Webserver](images/webserver-bb.png?raw=true "Webserver")
+
+_Web server AB: Open to the internet_ / _Web server BB: Blocked with firewall rule_
+
+
 
 ---
 ## Additional reading
