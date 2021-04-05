@@ -113,12 +113,13 @@ The users were then added to the projects and given roles according to what they
 The main account (sonja@sonjahiltunen.com) is kept intact (with maximum permissions), as per the lab requirements. 
 
 **Requirement 1.2**
-- The four required roles can be seen in the screenshot below. 
+The four required roles can be seen in the screenshot below. 
 ![IAM](images/1-2-iam.png?raw=true "IAM")
 
+A similar setup has been done for project B. 
 
 **Notes**
-- There is also a service account for Terraform. This was added in the [API credentials section](https://console.cloud.google.com/apis/credentials) in the cloud console (following the guidelines [here](https://registry.terraform.io/providers/hashicorp/google/latest/docs/guides/getting_started)). 
+- Note the service account for Terraform. This was added in the [API credentials section](https://console.cloud.google.com/apis/credentials) in the cloud console (following the guidelines [here](https://registry.terraform.io/providers/hashicorp/google/latest/docs/guides/getting_started)). 
 - If I had more time, I would have looked into reducing the permissions so that they are specific to our use case. The required roles were very wide and do not follow the least priviledge principle. We want to [use IAM securely](https://cloud.google.com/iam/docs/using-iam-securely). 
 - I ran `terraform apply` as an owner. The Terraform project structure could have been optimized so that different teams (with different roles / permissions) can easily use Terraform separate. This is for an advanced use case with Terraform that I will save for later. 
 ---
@@ -148,10 +149,6 @@ module "vpc" {
       subnet_private_access = "true"
     }
   ]
-
-  firewall_rules = []
-  # https://registry.terraform.io/modules/GMafra/firewall-rules/gcp/latest
-}
 ```
 and 
 
