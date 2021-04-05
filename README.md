@@ -17,7 +17,7 @@ _Figure: Firewalls and VPN_
 
 ## Google Cloud and Terraform
 
-To begin with, I set up all infrastructure manually using the Google Cloud Console. After setting up project A, its VPN tunnel and an example firewall rule, I realized that `
+To begin with, I set up all infrastructure manually using the Google Cloud Console. After setting up project A, its VPN tunnel and an example firewall rule, I realized that
 
 - Since project B was almost exactly the same (with minor differences), it would be super error prone and boring to continue
 - Especially firewall rules were error prone to set up, and fiddly to change in the UI.
