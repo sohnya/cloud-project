@@ -254,7 +254,7 @@ The firewall rules were implemented in Terraform using the resource [compute_fir
 | --- |---| --- |---|:---:| ---|---|---|---|---
 |4.1.3| VM-AA1 CAN ping VM-BA1 using Firewall rules |a|egress| allow | icmp | | vm-aa1 |
 |||b|ingress| allow | icmp | vm-aa1 | vm-ba1 |
-|4.1.4| VM-BA1 CANNOT ping VM-AA1 using Firewall rules |a| ingress | deny | icmp | vm-ba1 | vm-ab1 |
+|4.1.4| VM-BA1 CANNOT ping VM-AA1 using Firewall rules |a| ingress | deny | icmp | vm-ba1 | vm-aa1 |
 |4.2.1(a)| VM-AA1 CANNOT ping VM-AB1 using Firewall rules | a | ingress | deny | icmp | vm-aa1 | vm-ab1 |
 |4.2.1(b)| VM-AB1 CANNOT ping VM-AA1 using Firewall rules |a|ingress| deny | icmp | vm-ab1 | vm-aa1 |
 |4.3.1(a)| VM-BA1 CAN ping VM-BB1 using Firewall rules |b|egress| allow | icmp | | vm-ba1 |
